@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+	namespace：必须与对应的接口全类名一致
+	id:必须与对应接口的某个对应的方法名一致
+ -->
+<mapper namespace="com.hnzskj.worker.mapper.WorkerMapper">
+   
+    <!-- 查询参数，修改即可 -->
+    <sql id="fields">
+    	UUID,NAME,MOBILE,BIRTHDAY,GENDER,ADDRESS,WORKTYPE,WAGES,NOTE,STATUS,SEQUENCENO,CREATETIME
+    </sql>
+    
+    <!-- 查询参数，修改即可 -->
+    <sql id="searchFields">
+    	UUID,NAME,MOBILE,BIRTHDAY,GENDER,ADDRESS,WORKTYPE,
+    	(SELECT TEXT FROM SYS_WORK_TYPE WHERE CATEGORY='WORKTYPE' AND CODE = WORKTYPE) AS WORKTYPENAME
+    	,WAGES,NOTE,STATUS,SEQUENCENO,CREATETIME
+    </sql>
+    
+    <sql id="tableName">
+    	SYS_WORKER
+    </sql>
+    
+    
+    <!-- 分页，通过map进行设置，map的key为pageBean，一般不需要修改 -->
+    <sql id="limitSql" >
+    	 <if test="null!=pageBean" >
+    		 limit ${pageBean.limit} offset ${pageBean.offset}
+    	 </if>
+    </sql>
+    
+    <!-- 动态where条件，通过map进行设置，map的key为demo，demo对应的就是service中的modelName -->
+    <sql id="dynamicWhere" >
+	  	<where>
+	  		<if test="null!=worker" >
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(worker.name)" >
+			        and NAME like '%'+#{worker.name}+'%' 
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(worker.workType)" >
+			        and WORKTYPE=#{worker.workType}
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(worker.gender)" >
+			        and gender = #{worker.gender}
+			    </if>
+			     <if test="@org.apache.commons.lang.StringUtils@isNotBlank(worker.status)" >
+			        and status = #{worker.status}
+			    </if>
+		    </if>
+		    and 1=1 
+	  	</where>
+  	</sql>
+  	
+  	<!-- 添加 -->
+	<insert id="add" parameterType="Worker">													
+		insert into <include refid="tableName" />(<include refid="fields" />) values(#{uuid},#{name},#{mobile},#{birthday},#{gender},#{addRess},#{workType},#{wages},#{note},#{status},#{sequenceNo},#{currentTime})
+	</insert>
+	
+	<!-- 修改 -->
+	<update id="update" parameterType="Worker">
+		update <include refid="tableName" /> set name=#{name},mobile=#{mobile},birthday=#{birthday},gender=#{gender},addRess=#{addRess},workType=#{workType},wages=#{wages},note=#{note},status=#{status},SEQUENCENO=#{sequenceNo} where UUID=#{uuid}
+	</update>
+	
+	<!-- 删除 -->
+	<delete id="deleteByPrimaryKey" parameterType="Worker">
+		delete from  <include refid="tableName" /> where uuid = #{uuid}
+	</delete>
+	
+	
+	<!-- 批量删除 -->
+	<delete id="delete" >
+		delete from  <include refid="tableName" />  where uuid in
+	  <foreach collection="array" index="index" item="item" open="(" separator="," close=")">  
+           #{item}   
+   	  </foreach>  
+	</delete>
+	
+ 	<!-- mybsits_config中配置的alias类别名,也可直接配置resultType为类-->  
+	<select id="findByPrimaryKey" parameterType="Worker" resultType="Worker">
+		select <include refid="searchFields" /> from <include refid="tableName" /> 
+		where uuid=#{uuid}
+	</select>
+	
+	<!-- 根据条件查询一条数据 -->
+	<select id="findByExample" parameterType="Worker" resultType="Worker">
+		select top 1 <include refid="searchFields" /> from <include refid="tableName" />  
+		<include refid="dynamicWhere" />
+	</select>
+	
+	<!-- 查询数量 -->
+	<select id="findCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+		select count(1) from <include refid="tableName" /> 
+		<include refid="dynamicWhere" />
+	</select>
+	
+	
+	<!-- 分页查询，pageBean为null，默认查询所有的数据 -->
+	<select id="find" parameterType="java.util.Map"  resultType="Worker" >
+	 	<if test="null!=pageBean" >
+			select top ${pageBean.limit} <include refid="searchFields" /> from <include refid="tableName" /> 
+			<include refid="dynamicWhere" />
+			and uuid not in (
+				select top ${pageBean.offset} uuid  from <include refid="tableName" /> 
+				<include refid="dynamicWhere" />
+			)
+		</if>
+		<if test="null==pageBean" >
+			select <include refid="searchFields" /> from <include refid="tableName" /> 
+			<include refid="dynamicWhere" />
+		</if>
+		ORDER BY SEQUENCENO ASC,CREATETIME DESC
+	</select>
+	
+	
+</mapper>

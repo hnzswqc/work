@@ -1,0 +1,12 @@
+2016-11-17跟新内容
+1、type表新增实体对象，新增VIEW_NAME字段 VARCHAR(50)，用于查询短信发送记录过滤条件
+2、所有预警视图新增FOREIGNKEY用于区分判断是否需要重复发送短信。跟personuuid结合使用进行判断。
+3、SENDMSG表中新增FOREIGNKEY VARCHAR(200)字段，同2。
+4、在web.xml中增加过滤掉*.map文件。
+
+
+
+
+ewsm全程early warning system，安全预警系统。提供短信提醒、安全预警以及定时任务预警功能。
+并且为客户端程序提供后台api方法和数据实现客户端+web界面+短信等多方位预警提醒功能。并且跟OA管理
+系统进行集成，大大提高工作效率。

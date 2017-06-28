@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+	namespace：必须与对应的接口全类名一致
+	id:必须与对应接口的某个对应的方法名一致
+ -->
+<mapper namespace="com.hnzskj.checkwork.mapper.CheckWorkMapper">
+   
+    <!-- 查询参数，修改即可 -->
+    <sql id="fields">
+    	UUID,DATE,WORKERUUID,WORKERNAME,WORKTYPE,TIME,STATUS,SCORE,WAGES,LENDMONEY,NOTE,USERUUID,USERNAME,CREATETIME,SEQUENCENO
+    </sql>
+    
+    <sql id="tableName">
+    	SYS_CHECK_WORK
+    </sql>
+    
+    
+    <!-- 分页，通过map进行设置，map的key为pageBean，一般不需要修改 -->
+    <sql id="limitSql" >
+    	 <if test="null!=pageBean" >
+    		 limit ${pageBean.limit} offset ${pageBean.offset}
+    	 </if>
+    </sql>
+    
+    <!-- 动态where条件，通过map进行设置，map的key为demo，demo对应的就是service中的modelName -->
+    <sql id="dynamicWhere" >
+	  	<where>
+	  		  and 1=1 
+	  		<if test="null!=checkWork" >
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(checkWork.date)" >
+			        and DATE =#{checkWork.date}
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(checkWork.workerName)" >
+			        and WORKERNAME like '%'+#{checkWork.workerName}+'%'
+			    </if>
+			     <if test="@org.apache.commons.lang.StringUtils@isNotBlank(checkWork.workerUuid)" >
+			        and WORKERUUID= #{checkWork.workerUuid}
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(checkWork.score)" >
+			        and SCORE = #{checkWork.score}
+			    </if>
+		    </if>
+	  	</where>
+  	</sql>
+  	
+  	<!-- 添加 -->
+	<insert id="add" parameterType="CheckWork">													
+		insert into <include refid="tableName" />(<include refid="fields" />) values(#{uuid},#{date},#{workerUuid},#{workerName},#{time},#{status},#{score},#{wages},#{lendMoney},#{note},#{userUuid},#{userName},#{currentTime},#{sequenceNo})
+	</insert>
+	
+	<!-- 修改 -->
+	<update id="update" parameterType="CheckWork">
+		update <include refid="tableName" /> set date=#{date},workerUuid=#{workerUuid},workerName=#{workerName},time=#{time},time=#{status},time=#{score},wages=#{wages},lendMoney=#{lendMoney},note=#{note} where UUID=#{uuid}
+	</update>
+	
+	<!-- 删除 -->
+	<delete id="deleteByPrimaryKey" parameterType="CheckWork">
+		delete from  <include refid="tableName" /> where uuid = #{uuid}
+	</delete>
+	
+	<!-- 删除 -->
+	<delete id="deleteByDate" parameterType="CheckWork">
+		delete from  <include refid="tableName" /> where date=#{date}
+	</delete>
+	
+	
+	<!-- 批量删除 -->
+	<delete id="delete" >
+		delete from  <include refid="tableName" />  where uuid in
+	  <foreach collection="array" index="index" item="item" open="(" separator="," close=")">  
+           #{item}   
+   	  </foreach>  
+	</delete>
+	
+ 	<!-- mybsits_config中配置的alias类别名,也可直接配置resultType为类-->  
+	<select id="findByPrimaryKey" parameterType="CheckWork" resultType="CheckWork">
+		select <include refid="fields" /> from <include refid="tableName" /> 
+		where uuid=#{uuid}
+	</select>
+	
+	<!-- 根据条件查询一条数据 -->
+	<select id="findByExample" parameterType="CheckWork" resultType="CheckWork">
+		select top 1 <include refid="fields" /> from <include refid="tableName" />  
+		<include refid="dynamicWhere" />
+	</select>
+	
+	<!-- 查询数量 -->
+	<select id="findCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+		select count(1) from <include refid="tableName" /> 
+		<include refid="dynamicWhere" />
+	</select>
+	
+	
+	<!-- 分页查询，pageBean为null，默认查询所有的数据 -->
+	<select id="find" parameterType="java.util.Map"  resultType="CheckWork" >
+	 	<if test="null!=pageBean" >
+			select top ${pageBean.limit} <include refid="fields" /> from <include refid="tableName" /> 
+			<include refid="dynamicWhere" />
+			and uuid not in (
+				select top ${pageBean.offset} uuid  from <include refid="tableName" /> 
+				<include refid="dynamicWhere" />
+			)
+		</if>
+		<if test="null==pageBean" >
+			select <include refid="fields" /> from <include refid="tableName" /> 
+			<include refid="dynamicWhere" />
+		</if>
+		ORDER BY SEQUENCENO ASC,TIME ASC,CREATETIME DESC
+	</select>
+	
+	
+	<!-- 批量删除 -->
+	<delete id="addCheckWorkList" >
+		insert into <include refid="tableName" /> (<include refid="fields" />) values
+	    <foreach collection="list" item="item" index="index" separator="," >  
+	        (#{item.uuid},#{item.date},#{item.workerUuid},#{item.workerName},#{item.workType},#{item.time},#{item.status},#{item.score},#{item.wages},#{item.lendMoney},#{item.note},#{item.userUuid},#{item.userName},#{item.currentTime},#{item.sequenceNo})  
+	    </foreach>    
+	</delete>
+	
+	<!-- 分页查询，pageBean为null，默认查询所有的数据 -->
+	<select id="findByDate" parameterType="java.util.Map"  resultType="Worker" >
+		select distinct WORKERUUID AS UUID,WORKERNAME AS NAME,WORKTYPE,SEQUENCENO,
+		(SELECT TEXT FROM SYS_WORK_TYPE WHERE CATEGORY='WORKTYPE' AND CODE = WORKTYPE) AS WORKTYPENAME
+		 from SYS_CHECK_WORK
+		where DATE = #{date}
+		order by SEQUENCENO asc
+	</select>
+	
+	
+	
+</mapper>

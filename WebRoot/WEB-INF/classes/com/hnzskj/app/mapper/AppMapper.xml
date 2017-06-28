@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+	namespace：必须与对应的接口全类名一致
+	id:必须与对应接口的某个对应的方法名一致
+ -->
+<mapper namespace="com.hnzskj.app.mapper.AppMapper">
+   
+    <!-- 查询参数，修改即可 -->
+    <sql id="fields">
+    	UUID,SERVERUUID,NAME,PROJECTNAME,PATH,PORT,DEPLOYTIME,VERSION,TESTURL,TYPE,START,STOP,SEQUENCENO,NOTE,RUNSTATUS,CREATETIME
+    </sql>
+    
+    <sql id="searchFields">
+    	<include refid="fields"/>,(SELECT SERVERNAME FROM SYS_SERVER S WHERE S.UUID = SYS_APP.SERVERUUID) AS SERVERNAME
+    </sql>
+    
+    
+    <sql id="viewFields">
+    	<include refid="fields"/>,ORGUUID,SERVERNAME,OSNAME,SERVERIP,LOGINNAME,PASSWORD,ORGCODE,ORGNAME,ORGPARENTUUID,ORGPROP,LINKMAN,LINKMOBILE
+    </sql>
+    
+    <!-- task任务表 -->
+    <sql id="taskFields">
+    	UUID,TYPE,FOREIGNKEY,FOREIGNNAME,TIMERUUID,NAME,[STATUS],USERUUID,USERNAME,CREATETIME
+    </sql>
+    
+    <!-- task表名 -->
+    <sql id="taskTableName">
+    	SYS_TASK
+    </sql>
+    
+    
+    <!-- 表名 -->
+    <sql id="tableName">
+    	SYS_APP
+    </sql>
+    
+    <!-- 表名 -->
+    <sql id="viewName">
+    	VIEW_APP
+    </sql>
+    
+    
+    
+    <!-- 分页，通过map进行设置，map的key为pageBean，一般不需要修改 -->
+    <sql id="limitSql" >
+    	 <if test="null!=pageBean" >
+    		 limit ${pageBean.limit} offset ${pageBean.offset}
+    	 </if>
+    </sql>
+    
+    <!-- 动态where条件，通过map进行设置，map的key为demo，demo对应的就是service中的modelName -->
+    <sql id="dynamicWhere" >
+	  	<where>
+	  		<if test="null!=app" >
+		  		<if test="@org.apache.commons.lang.StringUtils@isNotBlank(app.uuid)" >
+			        and uuid = #{app.uuid} 
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(app.name)" >
+			        and name like '%'+#{app.name}+'%'  
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(app.projectName)" >
+			        and projectName=#{app.projectName}
+			    </if>
+			     <if test="@org.apache.commons.lang.StringUtils@isNotBlank(app.runStatus)" >
+			        and runStatus=#{app.runStatus}
+			    </if>
+			
+			     <if test="@org.apache.commons.lang.StringUtils@isNotBlank(app.orgUuid)" >
+			        and serverUuid in (select UUID  from SYS_SERVER where ORGUUID =#{app.orgUuid})
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isBlank(app.orgUuid)" >
+		            <if test="@org.apache.commons.lang.StringUtils@isNotBlank(app.serverUuid)" >
+				        and serverUuid=#{app.serverUuid}
+				    </if>
+			    </if>
+		    </if>
+		    and 1=1 
+	  	</where>
+  	</sql>
+  
+  	<!-- 添加 -->
+	<insert id="add" parameterType="App">															 															
+		insert into <include refid="tableName"/> (<include refid="fields" />) values(#{uuid},#{serverUuid},#{name},#{projectName},#{path},#{port},#{deployTime},#{version},#{testUrl},#{type},#{start},#{stop},#{sequenceNo},#{note},-1,#{currentTime})
+	</insert>
+	
+	<!-- 添加 -->
+	<insert id="addTaskApp" parameterType="App">												  
+		insert into <include refid="taskTableName"/> (<include refid="taskFields" />) values(NEWID(),#{type},#{uuid},#{note},#{timerUuid},#{name},#{runStatus},#{userUuid},#{userName},#{currentTime})
+	</insert>
+	
+	<!-- 添加 -->
+	<insert id="addTaskServer" parameterType="Server">											
+		insert into <include refid="taskTableName"/> (<include refid="taskFields" />) values(NEWID(),#{type},#{uuid},#{note},#{timerUuid},#{serverName},#{status},#{userUuid},#{userName},#{currentTime})
+	</insert>
+	
+	<!-- 修改 -->
+	<update id="update" parameterType="App">
+		update <include refid="tableName"/> set SERVERUUID=#{serverUuid},NAME=#{name},PROJECTNAME=#{projectName},PATH=#{path},PORT=#{port},DEPLOYTIME=#{deployTime},VERSION=#{version},TESTURL=#{testUrl},TYPE=#{type},START=#{start},STOP=#{stop},SEQUENCENO=#{sequenceNo},NOTE=#{note} where uuid=#{uuid}
+	</update>
+	
+	<!-- 修改 -->
+	<update id="updateStatus" parameterType="App">
+		update <include refid="tableName"/> set RUNSTATUS=#{runStatus} where uuid=#{uuid}
+	</update>
+	
+		<!-- 修改 -->
+	<update id="updApp" parameterType="App">
+		update <include refid="tableName"/> set RUNSTATUS=#{runStatus} where SERVERUUID = #{serverUuid}
+	</update>
+	
+	
+	
+	
+	<!-- 删除 -->
+	<delete id="deleteByPrimaryKey" parameterType="App">
+		delete from  <include refid="tableName"/> where uuid = #{uuid}
+	</delete>
+	
+	
+	<!-- 批量删除 -->
+	<delete id="delete" >
+		delete from  <include refid="tableName"/>  where uuid in
+	  <foreach collection="array" index="index" item="item" open="(" separator="," close=")">  
+           #{item}   
+   	  </foreach>  
+	</delete>
+	
+ 	<!-- mybsits_config中配置的alias类别名,也可直接配置resultType为类-->  
+	<select id="findByPrimaryKey" parameterType="App" resultType="App">
+		select <include refid="searchFields" /> from <include refid="tableName"/> 
+		where uuid=#{uuid}
+	</select>
+	
+	<select id="findByUuid" parameterType="App" resultType="App">
+		select <include refid="viewFields" /> from <include refid="viewName"/> 
+		where uuid=#{uuid}
+	</select>
+	
+	
+	
+	<!-- 根据条件查询一条数据 -->
+	<select id="findByExample" parameterType="App" resultType="App">
+		select top 1 <include refid="searchFields" /> from <include refid="tableName"/>  
+		<include refid="dynamicWhere" />
+	</select>
+	
+	<!-- 查询数量 -->
+	<select id="findCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+		select count(1) from <include refid="tableName"/> 
+		<include refid="dynamicWhere" />
+	</select>
+	
+	
+	<!-- 分页查询，pageBean为null，默认查询所有的数据 -->
+	<select id="find" parameterType="java.util.Map"  resultType="App" >
+	 	<if test="null!=pageBean" >
+			select top ${pageBean.limit} <include refid="searchFields" /> from <include refid="tableName"/> 
+			<include refid="dynamicWhere" />
+			and uuid not in (
+				select top ${pageBean.offset} uuid  from <include refid="tableName"/> 
+				<include refid="dynamicWhere" />
+			)
+		</if>
+		<if test="null==pageBean" >
+			select <include refid="searchFields" /> from <include refid="tableName"/> 
+		</if>
+		ORDER BY SEQUENCENO ASC,CREATETIME DESC
+	</select>
+	
+	<!-- 查询所有app详细信息-->
+	<select id="findList" parameterType="App"  resultType="App" >
+		select <include refid="viewFields" /> from <include refid="viewName"/>  where SERVERUUID = #{serverUuid}
+		ORDER BY SEQUENCENO ASC,CREATETIME DESC
+	</select>
+	
+	<!-- 查询部门下服务器信息 -->
+	<select id="queryOrgServerList" parameterType="Org" resultType="Org">
+		select * from (
+			select UUID,ORGNAME,ORGPARENTUUID,1 as status,SEQUENCENO,'' as note,'' AS type  from SYS_ORG  
+			union all
+			select UUID,SERVERNAME,ORGUUID,2 as status,SEQUENCENO,serverIp as note,OSNAME AS type  from SYS_SERVER
+		) t order by SEQUENCENO
+	</select>
+	
+	
+	 <!-- 动态where条件，通过map进行设置，map的key为demo，demo对应的就是service中的modelName -->
+    <sql id="viewDynamicWhere" >
+	  	<where>
+	  		<if test="null!=app" >
+		  		<if test="@org.apache.commons.lang.StringUtils@isNotBlank(app.uuid)" >
+			        and uuid = #{app.uuid} 
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(app.name)" >
+			        and name like '%'+#{app.name}+'%'  
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(app.projectName)" >
+			        and projectName=#{app.projectName}
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(app.orgUuid)" >
+			        and orguuid = #{app.orgUuid}
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(app.serverUuid)" >
+			        and serverUuid=#{app.serverUuid}
+			    </if>
+		    </if>
+		    and 1=1 
+	  	</where>
+  	</sql>
+  	
+  	
+	<!-- 根据条件查询一条数据 -->
+	<select id="findOrgServerApp" parameterType="App" resultType="App">
+		select <include refid="viewFields" /> from <include refid="viewName"/> 
+		where uuid=#{uuid}
+	</select>
+	
+	<!-- 查询部门下服务器信息 -->
+	<select id="queryErrorOrgList" parameterType="App" resultType="App">
+		SELECT MAPNAME FROM VIEW_APP WHERE RUNSTATUS !=2 GROUP BY MAPNAME 
+	</select>
+	
+	<!-- 查询单位下应用状态信息 -->
+	<select id="queryOrgStatusCountList" parameterType="Chart" resultType="Chart">
+			SELECT UUID AS ORGUUID,ORGNAME,normal,ANOMALY FROM (
+				select UUID,ORGNAME,SEQUENCENO,
+				(select COUNT(1) from VIEW_APP where ORGUUID = SYS_ORG.UUID and RUNSTATUS = 2) as normal,
+				(select COUNT(1) from VIEW_APP where ORGUUID = SYS_ORG.UUID and RUNSTATUS != 2) as ANOMALY
+				 from SYS_ORG 
+				) T WHERE normal+ANOMALY>0
+			ORDER BY SEQUENCENO
+	</select>
+	
+	<!-- 查询单位下应用数量信息 -->
+	<select id="queryOrgAppCountList" parameterType="Chart" resultType="Chart">
+			 SELECT ORGUUID,ORGNAME,COUNT(1) as normal FROM VIEW_APP
+			 group by ORGUUID,ORGNAME	
+	</select>
+	
+	<!-- 查询单位下服务器数量 -->
+	<select id="queryOrgServerCountList" parameterType="Chart" resultType="Chart">
+			  select SYS_ORG.UUID as orguuid ,SYS_ORG.ORGNAME,COUNT(1) as normal from SYS_SERVER left join
+			  SYS_ORG on SYS_ORG.UUID = SYS_SERVER.ORGUUID
+			 group by SYS_ORG.UUID,SYS_ORG.ORGNAME
+	</select>
+	
+		<!-- 根据条件查询一条数据 -->
+	<select id="findAllApp" parameterType="App" resultType="App">
+		select <include refid="viewFields" /> from <include refid="viewName"/> 
+		order by SEQUENCENO_ORG ASC ,SEQUENCENO_SERVER ASC,SEQUENCENO ASC
+	</select>
+	
+	
+</mapper>

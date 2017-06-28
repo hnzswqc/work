@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+	namespace：必须与对应的接口全类名一致
+	id:必须与对应接口的某个对应的方法名一致
+ -->
+<mapper namespace="com.hnzskj.worktype.mapper.WorkTypeMapper">
+   
+    <!-- 查询参数，修改即可 -->
+    <sql id="fields">
+    	UUID,CATEGORY,CODE,TEXT,SEQUENCENO,STATUS
+    </sql>
+    
+    <sql id="tableName">
+    	SYS_WORK_TYPE
+    </sql>
+    
+    
+    <!-- 分页，通过map进行设置，map的key为pageBean，一般不需要修改 -->
+    <sql id="limitSql" >
+    	 <if test="null!=pageBean" >
+    		 limit ${pageBean.limit} offset ${pageBean.offset}
+    	 </if>
+    </sql>
+    
+    <!-- 动态where条件，通过map进行设置，map的key为demo，demo对应的就是service中的modelName -->
+    <sql id="dynamicWhere" >
+	  	<where>
+	  		<if test="null!=workType" >
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(workType.code)" >
+			        and CODE like '%'+#{workType.code}+'%' 
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(workType.text)" >
+			        and TEXT like '%'+#{workType.text}+'%'
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(workType.cateGory)" >
+			        and CATEGORY = #{workType.cateGory}
+			    </if>
+		    </if>
+		    and STATUS= 0 
+	  	</where>
+  	</sql>
+  	
+  	<!-- 添加 -->
+	<insert id="add" parameterType="WorkType">													
+		insert into <include refid="tableName" />(<include refid="fields" />) values(#{uuid},#{cateGory},#{code},#{text},#{sequenceNo},0)
+	</insert>
+	
+	<!-- 修改 -->
+	<update id="update" parameterType="WorkType">
+		update <include refid="tableName" /> set CODE=#{code},TEXT=#{text},SEQUENCENO=#{sequenceNo} where UUID=#{uuid}
+	</update>
+	
+	<!-- 删除 -->
+	<delete id="deleteByPrimaryKey" parameterType="WorkType">
+		update  <include refid="tableName" />  set status = 1 where uuid = #{uuid}
+	</delete>
+	
+	
+	<!-- 批量删除 -->
+	<delete id="delete" >
+		update  <include refid="tableName" />  set status = 1  where uuid in
+	  <foreach collection="array" index="index" item="item" open="(" separator="," close=")">  
+           #{item}   
+   	  </foreach>  
+	</delete>
+	
+ 	<!-- mybsits_config中配置的alias类别名,也可直接配置resultType为类-->  
+	<select id="findByPrimaryKey" parameterType="WorkType" resultType="WorkType">
+		select <include refid="fields" /> from <include refid="tableName" /> 
+		where uuid=#{uuid}
+	</select>
+	
+	<!-- 根据条件查询一条数据 -->
+	<select id="findByExample" parameterType="WorkType" resultType="WorkType">
+		select top 1 <include refid="fields" /> from <include refid="tableName" />  
+		<include refid="dynamicWhere" />
+	</select>
+	
+	<!-- 查询数量 -->
+	<select id="findCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+		select count(1) from <include refid="tableName" /> 
+		<include refid="dynamicWhere" />
+	</select>
+	
+	
+	<!-- 分页查询，pageBean为null，默认查询所有的数据 -->
+	<select id="find" parameterType="java.util.Map"  resultType="WorkType" >
+	 	<if test="null!=pageBean" >
+			select top ${pageBean.limit} <include refid="fields" /> from <include refid="tableName" /> 
+			<include refid="dynamicWhere" />
+			and uuid not in (
+				select top ${pageBean.offset} uuid  from <include refid="tableName" /> 
+				<include refid="dynamicWhere" />
+			)
+		</if>
+		<if test="null==pageBean" >
+			select <include refid="fields" /> from <include refid="tableName" /> 
+			<include refid="dynamicWhere" />
+		</if>
+		ORDER BY SEQUENCENO ASC
+	</select>
+	
+	
+</mapper>

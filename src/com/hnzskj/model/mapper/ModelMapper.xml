@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+	namespace：必须与对应的接口全类名一致
+	id:必须与对应接口的某个对应的方法名一致
+ -->
+<mapper namespace="com.hnzskj.model.mapper.ModelMapper">
+    
+    <!-- 查询参数，修改即可 -->
+    <sql id="fields">
+    	uuid,model_name as modelName,model_description as modelDescription,model_create_time as modelCreateTime,model_status as modelStatus,model_sequence as modelSequence,model_delete_type as modelDeleteType
+    </sql>
+    
+     <!-- 添加参数，修改即可 -->
+    <sql id="insertfields">
+    	uuid,model_name,model_description,model_status,model_sequence,model_create_time,model_delete_type
+    </sql>
+    
+    <!-- 分页，通过map进行设置，map的key为pageBean -->
+    <sql id="limitSql" >
+    	 <if test="null!=pageBean" >
+    		 limit ${pageBean.limit} offset ${pageBean.offset}
+    	 </if>
+    </sql>
+    
+    <!-- 动态where条件，通过map进行设置，map的key为demo，demo对应的就是service中的modelName -->
+    <sql id="dynamicWhere" >
+	  	<where>
+		  	<if test="null!=model" >
+		  		 <if test="@org.apache.commons.lang.StringUtils@isNotBlank(model.uuid)" >
+			        and uuid = #{model.uuid} 
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(model.modelStatus)" >
+			        and model_status = #{model.modelStatus} 
+			    </if>
+			    <if test="model.modelStatus != null">
+			    	 and model_status = #{model.modelStatus} 
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(model.modelName)" >
+			        and model_name like '%'+#{model.modelName}+'%'  
+			    </if>
+		     </if>
+		    and model_delete_type = 0
+	  	</where>
+  	</sql>
+  
+  	<!-- 添加 -->
+	<insert id="add" parameterType="Model">
+		insert into model(<include refid="insertfields" />) values(#{uuid},#{modelName},#{modelDescription},#{modelStatus},#{modelSequence},#{modelCreateTime},#{modelDeleteType})
+	</insert>
+	
+	<!-- 修改 -->
+	<update id="update" parameterType="Model">
+		update model set model_name=#{modelName},model_description = #{modelDescription},model_Status = #{modelStatus},model_Sequence =#{modelSequence}  where uuid=#{uuid}
+	</update>
+	
+	<!-- 删除 -->
+	<delete id="deleteByPrimaryKey" parameterType="Model">
+		update model set model_delete_type = 1 where uuid = #{uuid}
+	</delete>
+	
+	<!-- 批量删除 -->
+	<delete id="delete" >
+		update model set model_delete_type = 1  where uuid in
+	  <foreach collection="array" index="index" item="item" open="(" separator="," close=")">  
+           #{item}   
+   	  </foreach>  
+	</delete>
+	
+ 	<!-- mybsits_config中配置的alias类别名,也可直接配置resultType为类-->  
+	<select id="findByPrimaryKey" parameterType="Model" resultType="Model">
+		select <include refid="fields" /> from model where uuid=#{uuid}
+	</select>
+	
+	<!-- 根据条件查询一条数据 -->
+	<select id="findByExample" parameterType="Model" resultType="Model">
+		select <include refid="fields" /> from Model 
+		<include refid="dynamicWhere" />
+	</select>
+	
+	<!-- 查询数量 -->
+	<select id="findCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+		select count(1) from Model 
+		<include refid="dynamicWhere" />
+	</select>
+	
+	
+	<!-- 分页查询，pageBean为null，默认查询所有的数据 -->
+	<select id="find" parameterType="java.util.Map"  resultType="Model" >
+		select <include refid="fields" /> from Model 
+		<include refid="dynamicWhere" />
+		<include refid="limitSql" />
+		ORDER BY model_Sequence asc 
+	</select>
+	
+	
+</mapper>

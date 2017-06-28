@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+	namespace：必须与对应的接口全类名一致
+	id:必须与对应接口的某个对应的方法名一致
+ -->
+<mapper namespace="com.hnzskj.quartz.mapper.SendMsgMapper">
+    
+    <!-- 查询参数，修改即可 -->
+    <sql id="insertfields">
+    	UUID, CNNAME, PERSONUUID, CONTENT, TYPE, CREATE_TIME,STATE,NOTE,VIEWNAME,FOREIGNKEY
+    </sql>
+    
+    <sql id="fields">
+    	UUID, CNNAME, PERSONUUID, CONTENT,NOTE, TYPE, CREATE_TIME AS CREATETIME,STATE,VIEWNAME,FOREIGNKEY,(SELECT NAME FROM TYPE WHERE TYPE = SENDMSG.TYPE) AS TYPENAME
+    </sql>
+    
+     <!-- 查询参数，修改即可 -->
+    <sql id="warn_fields">
+    	CNNAME, PERSONUUID, MOBILE,COUNT,TYPE,NOTE,FOREIGNKEY
+    </sql>
+    
+    <sql id="type_fields">
+    	UUID, TYPE, NAME,VIEW_NAME AS VIEWNAME
+    </sql>
+
+    
+    <!-- 分页，通过map进行设置，map的key为pageBean，一般不需要修改 -->
+    <sql id="limitSql" >
+    	 <if test="null!=pageBean" >
+    		 limit ${pageBean.limit} offset ${pageBean.offset}
+    	 </if>
+    </sql>
+    
+    <!-- 动态where条件，通过map进行设置，map的key为demo，demo对应的就是service中的modelName -->
+    <sql id="dynamicWhere" >
+	  	<where>
+	  		<if test="null!=sendMsg" >
+		  		<if test="@org.apache.commons.lang.StringUtils@isNotBlank(sendMsg.personUuid)" >
+			        and personUuid = #{sendMsg.personUuid} 
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(sendMsg.cnname)" >
+			        and cnname like concat(concat('%',#{sendMsg.cnname}),'%')  
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(sendMsg.type)" >
+			        and type = #{sendMsg.type}
+			    </if>
+			     <if test="@org.apache.commons.lang.StringUtils@isNotBlank(sendMsg.viewName)" >
+			        and viewname = #{sendMsg.viewName}
+			    </if>
+			    <if test="null!=sendMsg.state" >
+			        and state = #{sendMsg.state}
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(sendMsg.startTime)" >
+		           <![CDATA[  and create_time>=#{sendMsg.startTime}]]>     
+			    </if>
+			      <if test="@org.apache.commons.lang.StringUtils@isNotBlank(sendMsg.endTime)" >
+			        <![CDATA[  and create_time<=#{sendMsg.endTime}]]>     
+			    </if>
+		    </if>
+	  	</where>
+  	</sql>
+  
+  	<!-- 添加 -->
+	<insert id="add" parameterType="SendMsg">
+		insert into SENDMSG(<include refid="insertfields" />) values(#{uuid},#{cnname},#{personUuid},#{content},#{type},#{currentTime},#{state},#{note},#{viewName},#{foreignKey})
+	</insert>
+	
+	<!-- 修改 -->
+	<update id="update" parameterType="SendMsg">
+		update SENDMSG set CNNAME = #{cnname},PERSONUUID = #{personUuid},CONTENT = #{content}, 	TYPE = #{type},NOTE = #{note} where uuid=#{uuid}
+	</update>
+	
+	<!-- 删除 -->
+	<delete id="deleteByPrimaryKey" parameterType="SendMsg">
+		delete from  SENDMSG where uuid = #{uuid}
+	</delete>
+	
+	
+	<!-- 批量删除 -->
+	<delete id="delete" >
+		delete from  SENDMSG   where uuid in
+	  <foreach collection="array" index="index" item="item" open="(" separator="," close=")">  
+           #{item}   
+   	  </foreach>  
+	</delete>
+	
+ 	<!-- mybsits_config中配置的alias类别名,也可直接配置resultType为类-->  
+	<select id="findByPrimaryKey" parameterType="SendMsg" resultType="SendMsg">
+		select <include refid="fields" /> from SENDMSG 
+		where uuid=#{uuid}
+	</select>
+	
+	<!-- 根据条件查询一条数据 -->
+	<select id="findByExample" parameterType="SendMsg" resultType="SendMsg">
+		select top 1 <include refid="fields" /> from SENDMSG  
+		<include refid="dynamicWhere" />
+	</select>
+	
+	<!-- 查询数量 -->
+	<select id="findCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+		select count(1) from SENDMSG 
+		<include refid="dynamicWhere" />
+	</select>
+	
+	
+	<!-- 分页查询，pageBean为null，默认查询所有的数据 -->
+	<select id="find" parameterType="java.util.Map"  resultType="SendMsg" >
+		select <include refid="fields" /> from SENDMSG 
+		<include refid="dynamicWhere" />
+		<include refid="limitSql" />
+		ORDER BY CREATE_TIME DESC
+	</select>
+	
+	
+	<!-- 分页查询，pageBean为null，默认查询所有的数据 -->
+	<select id="findSendMsgListInfo" parameterType="java.util.Map"  resultType="SendMsg" >
+		select <include refid="warn_fields" /> from ${viewName} 
+	</select>
+	
+	<!-- 分页查询，pageBean为null，默认查询所有的数据 -->
+	<select id="findSendMsgTypeListInfo" parameterType="java.util.Map"  resultType="Type" >
+		select <include refid="type_fields" /> from type 
+	</select>
+	
+	
+	
+	
+</mapper>

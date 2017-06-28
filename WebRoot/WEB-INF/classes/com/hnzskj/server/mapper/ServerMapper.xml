@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+	namespace：必须与对应的接口全类名一致
+	id:必须与对应接口的某个对应的方法名一致
+ -->
+<mapper namespace="com.hnzskj.server.mapper.ServerMapper">
+   
+    <!-- 查询参数，修改即可 -->
+    <sql id="fields">
+    	UUID,ORGUUID,SERVERNAME,SERVERBRAND,USETIME,OSNAME,OSVERSION,SERVERIP,LOGINNAME,PASSWORD,STATUS,NOTE,SEQUENCENO,CREATETIME
+    </sql>
+    
+    <sql id="searchFields">
+    	<include refid="fields"/>,(select ORGNAME from SYS_ORG S where s.uuid = SYS_SERVER.ORGUUID) AS ORGNAME
+    </sql>
+    
+    <!-- 分页，通过map进行设置，map的key为pageBean，一般不需要修改 -->
+    <sql id="limitSql" >
+    	 <if test="null!=pageBean" >
+    		 limit ${pageBean.limit} offset ${pageBean.offset}
+    	 </if>
+    </sql>
+    
+    <!-- 动态where条件，通过map进行设置，map的key为demo，demo对应的就是service中的modelName -->
+    <sql id="dynamicWhere" >
+	  	<where>
+	  		<if test="null!=server" >
+		  		<if test="@org.apache.commons.lang.StringUtils@isNotBlank(server.orgUuid)" >
+			        and orgUuid = #{server.orgUuid} 
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(server.serverName)" >
+			        and serverName like '%'+#{server.serverName}+'%'  
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(server.osName)" >
+			        and osName = #{server.osName} 
+			    </if>
+			     <if test="@org.apache.commons.lang.StringUtils@isNotBlank(server.serverIp)" >
+			        and serverIp like '%'+#{server.serverIp}+'%'  
+			    </if>
+			     <if test="@org.apache.commons.lang.StringUtils@isNotBlank(server.status)" >
+			        and status = #{server.status} 
+			    </if>
+		    </if>
+		    and 1=1 
+	  	</where>
+  	</sql>
+  
+  	<!-- 添加 -->
+	<insert id="add" parameterType="Server">									
+		insert into SYS_SERVER(<include refid="fields" />) values(#{uuid},#{orgUuid},#{serverName},#{serverBrand},#{useTime},#{osName},#{osVersion},#{serverIp},#{loginName},#{password},#{status},#{note},#{sequenceNo},#{currentTime})
+	</insert>
+	
+	<!-- 修改 -->
+	<update id="update" parameterType="Server">
+		update SYS_SERVER set orgUuid = #{orgUuid},serverName = #{serverName}, serverBrand = #{serverBrand},useTime = #{useTime},osName = #{osName},osVersion = #{osVersion},serverIp = #{serverIp},loginName = #{loginName},password = #{password},note = #{note},sequenceNo = #{sequenceNo} where uuid=#{uuid}
+	</update>
+	
+	<!-- 修改 -->
+	<update id="updateStatus" parameterType="Server">
+		update SYS_SERVER set status = #{status} where uuid=#{uuid}
+	</update>
+	
+	<!-- 删除 -->
+	<delete id="deleteByPrimaryKey" parameterType="Server">
+		delete from  SYS_SERVER where uuid = #{uuid}
+	</delete>
+	
+	
+	<!-- 批量删除 -->
+	<delete id="delete" >
+		delete from  SYS_ORG  where uuid in
+	  <foreach collection="array" index="index" item="item" open="(" separator="," close=")">  
+           #{item}   
+   	  </foreach>  
+	</delete>
+	
+ 	<!-- mybsits_config中配置的alias类别名,也可直接配置resultType为类-->  
+	<select id="findByPrimaryKey" parameterType="Org" resultType="Server">
+		select <include refid="searchFields" /> from SYS_SERVER 
+		where uuid=#{uuid}
+	</select>
+	
+	<!-- 根据条件查询一条数据 -->
+	<select id="findByExample" parameterType="Org" resultType="Server">
+		select top 1 <include refid="searchFields" /> from SYS_SERVER  
+		<include refid="dynamicWhere" />
+	</select>
+	
+	<!-- 查询数量 -->
+	<select id="findCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+		select count(1) from SYS_SERVER 
+		<include refid="dynamicWhere" />
+	</select>
+	
+	<!-- 查询当前应用下app数量 -->
+	<select id="findAppCount" parameterType="Server" resultType="java.lang.Integer">
+		select count(1) from sys_app where serverUuid=#{uuid} 
+	</select>
+	
+	
+	<!-- 分页查询，pageBean为null，默认查询所有的数据 -->
+	<select id="find" parameterType="java.util.Map"  resultType="Server" >
+	 	<if test="null!=pageBean" >
+			select top ${pageBean.limit} <include refid="searchFields" /> from SYS_SERVER 
+			<include refid="dynamicWhere" />
+			and uuid not in (
+				select top ${pageBean.offset} uuid  from SYS_SERVER 
+				<include refid="dynamicWhere" />
+			)
+		</if>
+		<if test="null==pageBean" >
+			select <include refid="searchFields" /> from SYS_SERVER 
+		</if>
+		ORDER BY SEQUENCENO ASC,CREATETIME DESC
+	</select>
+	
+	
+</mapper>

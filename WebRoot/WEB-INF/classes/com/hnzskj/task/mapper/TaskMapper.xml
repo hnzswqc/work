@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+	namespace：必须与对应的接口全类名一致
+	id:必须与对应接口的某个对应的方法名一致
+ -->
+<mapper namespace="com.hnzskj.task.mapper.TaskMapper">
+   
+    <!-- 查询参数，修改即可 -->
+    <sql id="fields">
+    	UUID,TYPE,TIMERUUID,FOREIGNKEY,FOREIGNNAME,NAME,STATUS,USERUUID,USERNAME,CREATETIME
+    </sql>
+    
+    <sql id="appfields">
+    	<include refid="fields" />,SERVERIP,ORGNAME,SERVERNAME
+    </sql>
+    
+    <sql id="viewTableName">
+    	VIEW_TASK
+     </sql>
+     
+    
+     <sql id="tableName">
+    	SYS_TASK
+     </sql>
+    
+    
+    <!-- 分页，通过map进行设置，map的key为pageBean，一般不需要修改 -->
+    <sql id="limitSql" >
+    	 <if test="null!=pageBean" >
+    		 limit ${pageBean.limit} offset ${pageBean.offset}
+    	 </if>
+    </sql>
+    
+    <!-- 动态where条件，通过map进行设置，map的key为demo，demo对应的就是service中的modelName -->
+    <sql id="dynamicWhere" >
+	  	<where>
+	  		<if test="null!=task" >
+		  		<if test="@org.apache.commons.lang.StringUtils@isNotBlank(task.uuid)" >
+			        and uuid = #{task.uuid} 
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(task.foreignKey)" >
+			        and foreignKey = #{task.foreignKey}
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(task.foreignName)" >
+			        and foreignName=#{task.foreignName}
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(task.type)" >
+			        and type =#{task.type}
+			    </if>
+			     <if test="@org.apache.commons.lang.StringUtils@isNotBlank(task.status)" >
+			        and status =#{task.status}
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(task.userUuid)" >
+			        and userUuid =#{task.userUuid}
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(task.orgUuid)" >
+			        and orgUuid =#{task.orgUuid}
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(task.timerUuid)" >
+			        and timerUuid =#{task.timerUuid}
+			    </if>
+		    </if>
+		    and 1=1 
+	  	</where>
+  	</sql>
+  	
+  	<!-- 添加 -->
+	<insert id="add" parameterType="Task">													
+		insert into <include refid="tableName" />(<include refid="fields" />) values(#{uuid},#{type},#{foreignKey},#{foreignName},#{name},#{status},#{userUuid},#{userName},#{currentTime})
+	</insert>
+	
+	<!-- 修改 -->
+	<update id="update" parameterType="Task">
+		update <include refid="tableName" /> set type = #{type},foreignKey = #{foreignKey},foreignName = #{foreignName}, name = #{name},status = #{status} where uuid=#{uuid}
+	</update>
+	
+	<!-- 删除 -->
+	<delete id="deleteByPrimaryKey" parameterType="Task">
+		delete from  <include refid="tableName" /> where uuid = #{uuid}
+	</delete>
+	
+	
+	<!-- 批量删除 -->
+	<delete id="delete" >
+		delete from  <include refid="tableName" />  where uuid in
+	  <foreach collection="array" index="index" item="item" open="(" separator="," close=")">  
+           #{item}   
+   	  </foreach>  
+	</delete>
+	
+ 	<!-- mybsits_config中配置的alias类别名,也可直接配置resultType为类-->  
+	<select id="findByPrimaryKey" parameterType="Task" resultType="Task">
+		select <include refid="fields" /> from <include refid="tableName" /> 
+		where uuid=#{uuid}
+	</select>
+	
+	<!-- 根据条件查询一条数据 -->
+	<select id="findByExample" parameterType="Task" resultType="Task">
+		select top 1 <include refid="fields" /> from <include refid="tableName" />  
+		<include refid="dynamicWhere" />
+	</select>
+	
+	<!-- 查询数量 -->
+	<select id="findCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+		select count(1) from <include refid="viewTableName" /> 
+		<include refid="dynamicWhere" />
+	</select>
+	
+	
+	<!-- 分页查询，pageBean为null，默认查询所有的数据 -->
+	<select id="find" parameterType="java.util.Map"  resultType="Task" >
+	 	<if test="null!=pageBean" >
+			select top ${pageBean.limit} <include refid="appfields" /> from <include refid="viewTableName" /> 
+			<include refid="dynamicWhere" />
+			and uuid not in (
+				select top ${pageBean.offset} uuid  from <include refid="viewTableName" /> 
+				<include refid="dynamicWhere" />
+			)
+		</if>
+		<if test="null==pageBean" >
+			select <include refid="appfields" /> from <include refid="viewTableName" /> 
+		</if>
+		ORDER BY CREATETIME DESC
+	</select>
+	
+	
+</mapper>

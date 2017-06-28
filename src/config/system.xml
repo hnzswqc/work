@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<system>
+	<!-- 平台标题 -->
+	<title>内部管理平台</title>
+	<!-- 平台版本 -->
+	<version>v2.0.0</version>
+	<!-- 查询近十天的花费 -->
+	<num>15</num>
+	<!-- lic限制 -->
+	<lic>MjAxNy0xMC0wMQ==</lic>
+	<!-- 联系电话 -->
+	<phone>17603852540</phone>
+</system>

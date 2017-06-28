@@ -1,0 +1,4 @@
+<Context docBase="work" path="/work" privileged="true" reloadable="false">
+	<Manager className="org.apache.catalina.session.PersistentManager" saveOnRestart="false"/>
+	<ResourceLink global="jdbc/work" name="jdbc/work" type="javax.sql.DataSource"/>
+</Context>

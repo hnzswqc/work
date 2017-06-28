@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<taglib xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
+	version="2.0">
+	<description>jsp工具类函数</description>
+	<tlib-version>1.0</tlib-version>
+	<short-name>fu</short-name>
+	<uri></uri>
+
+	<function>
+		<description>获取当前模块下所有功能信息</description>
+		<name>findPowerList</name>
+		<function-class>com.hnzskj.common.util.tag.FunctionUtils</function-class>
+		<function-signature>java.util.List findPowerList(java.lang.String)</function-signature>
+	</function>
+	
+	<function>
+		<description>获取当前模块下所有功能信息</description>
+		<name>isPing</name>
+		<function-class>com.hnzskj.common.util.tag.FunctionUtils</function-class>
+		<function-signature>java.lang.Boolean isPing(java.lang.String)</function-signature>
+	</function>
+	
+	<function>
+		<description>获取考勤的信息</description>
+		<name>findCheckWorkList</name>
+		<function-class>com.hnzskj.common.util.tag.FunctionUtils</function-class>
+		<function-signature>java.util.List findCheckWorkList(java.lang.String,com.hnzskj.worker.model.Worker)</function-signature>
+	</function>
+	
+	
+</taglib>

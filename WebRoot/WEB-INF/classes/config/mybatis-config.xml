@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    
+	<!-- 实体类,简称 -设置别名 -->
+	<typeAliases>
+		<!-- 分页 -->
+		<typeAlias alias="PageBean" type="com.hnzskj.common.model.PageBean"/>
+		<!-- 模块 -->
+		<typeAlias alias="Model" type="com.hnzskj.model.model.Model" />
+		<typeAlias alias="Warn" type="com.hnzskj.quartz.model.Warn" />
+		<typeAlias alias="SendMsg" type="com.hnzskj.quartz.model.SendMsg" />
+		<typeAlias alias="Type" type="com.hnzskj.quartz.model.Type" />
+		<!-- 用户 -->
+		<typeAlias alias="User" type="com.hnzskj.user.model.User" />
+		<!-- 机构-->
+		<typeAlias alias="Org" type="com.hnzskj.org.model.Org" />
+		<!-- 服务器-->
+		<typeAlias alias="Server" type="com.hnzskj.server.model.Server" />
+		<!-- 应用-->
+		<typeAlias alias="App" type="com.hnzskj.app.model.App" />
+		<!-- 统计图-->
+		<typeAlias alias="Chart" type="com.hnzskj.app.model.Chart" />
+		<!-- 定时任务-->
+		<typeAlias alias="Task" type="com.hnzskj.task.model.Task" />
+		<!-- 定时内容-->
+		<typeAlias alias="Timer" type="com.hnzskj.timer.model.Timer" />
+		<!-- 工种类别-->
+		<typeAlias alias="WorkType" type="com.hnzskj.worktype.model.WorkType" />
+		<!-- 工人-->
+		<typeAlias alias="Worker" type="com.hnzskj.worker.model.Worker" />
+		<!-- 考勤-->
+		<typeAlias alias="CheckWork" type="com.hnzskj.checkwork.model.CheckWork" />
+		<!--日常汇总-->
+		<typeAlias alias="WorkCollect" type="com.hnzskj.checkwork.model.WorkCollect" />
+		<!--日常花费-->
+		<typeAlias alias="WorkCost" type="com.hnzskj.checkwork.model.WorkCost" />
+		<!--日常花费-->
+		<typeAlias alias="Echarts" type="com.hnzskj.echarts.model.Echarts" />
+		
+
+	</typeAliases>	
+	
+	<!-- 实体接口映射资源 -->
+	<!--
+		说明：如果xxMapper.xml配置文件放在和xxMapper.java统一目录下，mappers也可以省略，因为org.mybatis.spring.mapper.MapperFactoryBean默认会去查找与xxMapper.java相同目录和名称的xxMapper.xml
+	-->
+	<mappers>
+		<!-- 模块 -->
+		<mapper resource="com/hnzskj/model/mapper/ModelMapper.xml" />
+		<!-- 模块 -->
+		<mapper resource="com/hnzskj/quartz/mapper/SendMsgMapper.xml" />
+		<!-- 用户 -->
+		<mapper resource="com/hnzskj/user/mapper/UserMapper.xml" />
+		<!-- 机构 -->
+		<mapper resource="com/hnzskj/org/mapper/OrgMapper.xml" />
+		<!-- 服务器 -->
+		<mapper resource="com/hnzskj/server/mapper/ServerMapper.xml" />
+		<!-- 服务器 -->
+		<mapper resource="com/hnzskj/app/mapper/AppMapper.xml" />
+		<!-- 定时任务 -->
+		<mapper resource="com/hnzskj/task/mapper/TaskMapper.xml" />
+		<!-- 定时内容 -->
+		<mapper resource="com/hnzskj/timer/mapper/TimerMapper.xml" />
+		<!-- 工种类别 -->
+		<mapper resource="com/hnzskj/worktype/mapper/WorkTypeMapper.xml" />
+		<!-- 工人 -->
+		<mapper resource="com/hnzskj/worker/mapper/WorkerMapper.xml" />
+		<!-- 考勤 -->
+		<mapper resource="com/hnzskj/checkwork/mapper/CheckWorkMapper.xml" />
+		<!-- 日常汇总 -->
+		<mapper resource="com/hnzskj/checkwork/mapper/WorkCollectMapper.xml" />
+		<!-- 日常花费 -->
+		<mapper resource="com/hnzskj/checkwork/mapper/WorkCostMapper.xml" />
+	</mappers>
+
+</configuration>  

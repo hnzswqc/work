@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+	namespace：必须与对应的接口全类名一致
+	id:必须与对应接口的某个对应的方法名一致
+ -->
+<mapper namespace="com.hnzskj.checkwork.mapper.WorkCollectMapper">
+   
+    <!-- 查询参数，修改即可 -->
+    <sql id="fields">
+    	UUID,DATE,WAGES,LENDMONEY,OTHER,WORKERNUM,USERUUID,USERNAME,CREATETIME
+    </sql>
+    
+    <sql id="tableName">
+    	SYS_WORK_COLLECT
+    </sql>
+    
+    
+    <!-- 分页，通过map进行设置，map的key为pageBean，一般不需要修改 -->
+    <sql id="limitSql" >
+    	 <if test="null!=pageBean" >
+    		 limit ${pageBean.limit} offset ${pageBean.offset}
+    	 </if>
+    </sql>
+    
+    <!-- 动态where条件，通过map进行设置，map的key为demo，demo对应的就是service中的modelName -->
+    <sql id="dynamicWhere" >
+	  	<where>
+	  		and 1=1 
+	  		<if test="null!=workCollect" >
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(workCollect.date)" >
+			        and DATE =#{workCollect.date}
+			    </if>
+			     <if test="@org.apache.commons.lang.StringUtils@isNotBlank(workCollect.startTime)" >
+			        and DATE  &gt;= #{workCollect.startTime}
+			    </if>
+			    <if test="@org.apache.commons.lang.StringUtils@isNotBlank(workCollect.endTime)" >
+			        and DATE &lt;= #{workCollect.endTime}
+			    </if>
+			    <if test="null!=workCollect.year" >
+			        and DATENAME(YEAR,DATE) = #{workCollect.year}
+			    </if>
+			    <if test="null!=workCollect.month" >
+			        and DATENAME(month,DATE) = #{workCollect.month}
+			    </if>
+			    
+		    </if>
+	  	</where>
+  	</sql>
+  	
+  	
+  	<!-- 添加 -->
+	<insert id="add" parameterType="WorkCollect">	
+		insert into <include refid="tableName" />(<include refid="fields" />) values(#{uuid},#{date},#{wages},#{lendMoney},#{other},#{workerNum},#{userUuid},#{userName},#{currentTime})
+	</insert>
+	
+	<!-- 修改 -->
+	<update id="update" parameterType="WorkCollect">
+		update <include refid="tableName" /> set date=#{date},wages=#{wages},lendMoney=#{lendMoney},other=#{other},workerNum=#{workerNum} where UUID=#{uuid}
+	</update>
+	
+	<!-- 删除 -->
+	<delete id="deleteByPrimaryKey" parameterType="WorkCollect">
+		delete from  <include refid="tableName" /> where uuid = #{uuid}
+	</delete>
+	
+	<!-- 批量删除 -->
+	<delete id="delete" >
+		delete from  <include refid="tableName" />  where uuid in
+	  <foreach collection="array" index="index" item="item" open="(" separator="," close=")">  
+           #{item}   
+   	  </foreach>  
+	</delete>
+	
+		<!-- 删除 -->
+	<delete id="deleteByDate" parameterType="WorkCost">
+		delete from  <include refid="tableName" /> where date=#{date}
+	</delete>
+	
+ 	<!-- mybsits_config中配置的alias类别名,也可直接配置resultType为类-->  
+	<select id="findByPrimaryKey" parameterType="WorkCollect" resultType="WorkCollect">
+		select <include refid="fields" /> from <include refid="tableName" /> 
+		where uuid=#{uuid}
+	</select>
+	
+	<!-- 根据条件查询一条数据 -->
+	<select id="findByExample" parameterType="WorkCollect" resultType="WorkCollect">
+		select top 1 <include refid="fields" /> from <include refid="tableName" />  
+		<include refid="dynamicWhere" />
+	</select>
+	
+	<!-- 查询数量 -->
+	<select id="findCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+		select count(1) from <include refid="tableName" /> 
+		<include refid="dynamicWhere" />
+	</select>
+	
+	
+	<!-- 分页查询，pageBean为null，默认查询所有的数据 -->
+	<select id="find" parameterType="java.util.Map"  resultType="WorkCollect" >
+	 	<if test="null!=pageBean" >
+			select top ${pageBean.limit} <include refid="fields" /> from <include refid="tableName" /> 
+			<include refid="dynamicWhere" />
+			and uuid not in (
+				select top ${pageBean.offset} uuid  from <include refid="tableName" /> 
+				<include refid="dynamicWhere" />
+			)
+		</if>
+		<if test="null==pageBean" >
+			select <include refid="fields" /> from <include refid="tableName" /> 
+			<include refid="dynamicWhere" />
+		</if>
+		ORDER BY DATE DESC
+	</select>
+	
+	<select id="collectYear" parameterType="java.util.Map"  resultType="WorkCollect" >
+		 select  SUM(WAGES) AS WAGES ,SUM(LENDMONEY) AS LENDMONEY,SUM(OTHER) AS OTHER from SYS_WORK_COLLECT 
+		 WHERE DATENAME(year,DATE) =#{year}
+		 group by DATENAME(year,DATE)
+	</select>
+	
+	<select id="collectQuarter" parameterType="java.util.Map"  resultType="WorkCollect" >
+		 select  SUM(WAGES) AS WAGES ,SUM(LENDMONEY) AS LENDMONEY,SUM(OTHER) AS OTHER from SYS_WORK_COLLECT
+		 WHERE DATENAME(quarter,DATE) =#{quarter}
+		 group by DATENAME(quarter,DATE)
+	</select>
+	
+	<select id="collectMonth" parameterType="java.util.Map"  resultType="WorkCollect" >
+		  select SUM(WAGES) AS WAGES ,SUM(LENDMONEY) AS LENDMONEY,SUM(OTHER) AS OTHER from SYS_WORK_COLLECT
+		  WHERE DATENAME(month,DATE) =#{month}
+		  group by DATENAME(month,DATE)
+	</select>
+	
+	<select id="collectDate" parameterType="java.util.Map"  resultType="WorkCollect" >
+		select top 1  WAGES,LENDMONEY,OTHER,DATE from SYS_WORK_COLLECT order by DATE DESC
+	</select>
+	
+	<select id="collectMonthByDate" parameterType="WorkCollect"  resultType="WorkCollect">
+		select WAGES,LENDMONEY,OTHER,DATE from SYS_WORK_COLLECT where  DATENAME(YEAR,DATE) = #{year} and DATENAME(MONTH,DATE) = #{month} order by DATE ASC
+	</select>
+	
+	<select id="collectYearByMonth" parameterType="WorkCollect"  resultType="WorkCollect">
+		select year,VIEW_MONTH.month,WAGES,LENDMONEY,OTHER from VIEW_MONTH left join (
+		select DATENAME(year,DATE) as year,DATENAME(month,DATE) as month,SUM(WAGES) AS WAGES ,SUM(LENDMONEY) AS LENDMONEY,SUM(OTHER) AS OTHER from  SYS_WORK_COLLECT
+		where  DATENAME(year,DATE) =#{year}
+		group by  DATENAME(year,DATE) ,DATENAME(month,DATE)
+		) t on VIEW_MONTH.month = t.month
+	</select>
+	
+	<select id="collectWorkerByMonth" parameterType="WorkCollect"  resultType="WorkCollect">
+		select WORKERNAME,WORKERUUID,COUNT(1) as count,
+		(select COUNT(1) from SYS_CHECK_WORK a where a.WORKERUUID = t.WORKERUUID and SCORE = 1 and DATENAME(year,DATE) = #{year} and DATENAME(month,DATE)= #{month}  )
+		as score,SUM(WAGES) AS WAGES,SUM(ISNULL(LENDMONEY,0)) AS LENDMONEY  from SYS_CHECK_WORK t 
+		 where DATENAME(year,DATE) = #{year} and DATENAME(month,DATE)= #{month} 
+		 group by WORKERNAME,WORKERUUID
+		order by count(1) desc
+	</select>
+	
+	<select id="collectCostByMonth" parameterType="WorkCollect"  resultType="WorkCost">
+		select WORKTYPE,SUM(MONEY) as cost,
+	(SELECT SUM(MONEY) AS MONEY  FROM SYS_WORK_COST
+		WHERE DATENAME(YEAR,DATE) = #{year} AND DATENAME(MONTH,DATE)= #{month} 
+	) AS MONEY,
+		(select text from SYS_WORK_TYPE where CODE = WORKTYPE and CATEGORY = 'SPENDING'
+		)as WORKTYPEname from SYS_WORK_COST
+		where DATENAME(year,DATE) = #{year} and DATENAME(month,DATE)= #{month} 
+		group by WORKTYPE
+	</select>
+	
+</mapper>
